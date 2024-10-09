@@ -38,11 +38,6 @@
     "config": {
         "bin-dir": "bin"
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "2.0.x-dev"
-        }
-    },
     "repositories": {
         "rest-api-sdk-php": {
             "type": "vcs",
