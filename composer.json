@@ -24,7 +24,7 @@
         }
     ],
     "require": {
-        "payum/core": "2.0.x-dev",
+        "payum/core": "^1.5",
         "paypal/rest-api-sdk-php" : "dev-master"
     },
     "require-dev": {
