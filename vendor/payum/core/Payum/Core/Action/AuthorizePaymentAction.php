@@ -1,0 +1,51 @@
+<?php
+
+namespace Payum\Core\Action;
+
+use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Exception\RequestNotSupportedException;
+use Payum\Core\GatewayAwareInterface;
+use Payum\Core\GatewayAwareTrait;
+use Payum\Core\Model\PaymentInterface;
+use Payum\Core\Request\Authorize;
+use Payum\Core\Request\Convert;
+use Payum\Core\Request\GetHumanStatus;
+
+class AuthorizePaymentAction implements ActionInterface, GatewayAwareInterface
+{
+    use GatewayAwareTrait;
+
+    /**
+     * @param Authorize $request
+     */
+    public function execute($request): void
+    {
+        RequestNotSupportedException::assertSupports($this, $request);
+
+        /** @var PaymentInterface $payment */
+        $payment = $request->getModel();
+
+        $this->gateway->execute($status = new GetHumanStatus($payment));
+        if ($status->isNew()) {
+            $this->gateway->execute($convert = new Convert($payment, 'array', $request->getToken()));
+
+            $payment->setDetails($convert->getResult());
+        }
+
+        $details = ArrayObject::ensureArrayObject($payment->getDetails());
+
+        $request->setModel($details);
+        try {
+            $this->gateway->execute($request);
+        } finally {
+            $payment->setDetails($details);
+        }
+    }
+
+    public function supports($request)
+    {
+        return $request instanceof Authorize &&
+            $request->getModel() instanceof PaymentInterface
+        ;
+    }
+}
